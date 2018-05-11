@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>¡Hoolimap!</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css">
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js"></script>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div id='aceptar' class='modal'>
+        <div class='modal-content'>
+            <h3>¡¿Está seguro que quiere aventurarse por esta ruta?!</h3>
+        </div>
+        <div class='modal-footer'>
+            <div>  
+                <button class="btn waves-effect waves-light" type="submit" name="action">Aceptar</button>
+                </button>  
+                <button class="btn waves-effect waves-light" type="submit" name="action">Cancelar</button>
+                </button>   
+            </div>
+        </div>
+    </div>
+    <div id="modal1" class="modal">
+      <div class="modal-content">
+        <h2>¡Bienvenido a Hoolimap!</h2>
+        <h5>Vender nunca había sido tan divertido</h5>
+        <p>¡Inicie sesión para iniciar la diversión! Digo, las ventas.</p>
+        <form>
+        <div>
+          <label for="name">Usuario:</label>
+          <input type="text" required />
+        </div>
+        <div>
+          <label for="mail">Contraseña:</label>
+          <input type="password" required/>
+        </div>
+        <div>  
+            <button class="btn waves-effect waves-light" type="submit" name="action">¡Que empiece el juego!</button>
+            <i class="material-icons right"></i>
+        </button>    
+        </div>
+      </button>
+            
+      </form>
+      </div>
+    </div>
+
+    <div class="modal" id='venta'>
+        <div class='modal-content'>
+            <h2>Confirmar venta</h2>
+            <h5>Estás a un paso de vender un producto</h5>
+            <form>
+                    <div>
+                      <label for="name">Cliente:</label>
+                      <input type="text" required />
+                    </div>
+                    <div>
+                      <label for="mail">Producto:</label>
+                      <input type="password" required/>
+                    </div>
+                    <div>  
+                        <button class="btn waves-effect waves-light" type="submit" name="action">¡Anótame esta venta!</button>
+                        <i class="material-icons right"></i>
+                    </button>    
+                    </div>
+                  </button>
+                        
+                  </form>
+        </div>
+    </div>
+    <nav>
+      <div class="nav-wrapper #1976d2 blue darken-2"> 
+        <a href="#" class="brand-logo">Hoolimap</a>
+          <ul id="nav-mobile" class="right hide-on-med-and-down transparent">
+                <li><button onclick="confirmarVenta()" id="ventas" class="right transparent waves-effect waves-light btn-small" >Confirmar venta</button></li>
+            <li><button onclick="mostrarLogros()" id="logros" class="right transparent waves-effect waves-light btn-small" >Logros <span id='ind' class='badge orage'>0</span></button></li>
+            <li><button onclick="mostrarRanking()" id="ranking" class="right transparent waves-effect waves-light btn-small">Ranking</button></li>
+            <li><button onclick="mostrarPerfil()" id="perfil" class="right transparent waves-effect waves-light btn-small">Perfil</button></li>
+          </ul>          
+      </div>
+    </nav>
+    <ul id="snlogros" class="sidenav" style='width: 40%'>
+      <li><h3>Logros</h3>
+      </li>
+    </ul>
+    
+    <ul id="snranking" class="sidenav" style='width: 40%'>
+      <li><h3>Ranking</h3>
+      </li>
+    </ul>
+
+    <ul id="snperfil" class="sidenav" style='width: 40%'>
+        <li><div class='user-view'>
+            <h3>Nombre: Pancracio Sifuentes</h3>
+            <p id='miNivel'>Nivel: 1</p>
+            <p id='misPuntos'>Puntos: 0</p>
+        </div>
+        </li>
+      </ul>
+    <div id="map"></div>
+    <script>
+      var map;
+      var ruta;
+      var directionsService;
+      var directionsDisplay;
+      var usuario = {
+           id: 1,
+            nombre: 'Pancracio Sifuentes',
+            minVenta: null,
+            puntos: 0,
+            nivel: 1,
+      };
+      var usuario2 = {
+          id: 2,
+            nombre: 'Helena Serena',
+            minVenta: null,
+            puntos: 120,
+            nivel: 3,
+      };
+      var ranking = [usuario2, usuario];
+      var puntosDeVenta = [
+        {
+          ubicacion: {lat: 37.1910427, lng: -3.6371932},
+          marker: null,
+        },
+        {
+          ubicacion: {lat: 37.1827411, lng: -3.5572912},
+          marker: null,
+        },
+        {
+          ubicacion: {lat: 37.1510411, lng: -3.5990612},
+          marker: null,
+        },
+      ];
+      var logros = [
+        {
+            id: 0,
+          name: 'Semi semi maratonista',
+          logrado: false,
+          dificultad: 1,
+          tipo: 'Mapa',
+          descripcion:'Pinta lo equivalente a un cuarto de maraton',
+          mensaje: 'Estas a tres cuartos de ser un verdadero maratonista.',
+          objetivo: 12,
+          actual: 0,
+        },
+        {
+            id: 1,
+          name: '¡Primera venta!',
+          logrado: false,
+          dificultad: 2,
+          tipo: 'Ventas',
+          descripcion: 'Realiza tu primera venta',
+          mensaje: 'Una vez que comienzas, ¡ya no puedes parar!',
+          objetivo: 15,
+          actual: 0,
+        },
+        {
+            id: 2,
+          name: 'Correcaminos',
+          logrado: false,
+          dificultad: 3,
+          tipo: 'Tiempo',
+          descripcion:'Realiza dos ventas en menos de 15 minutos de diferencia',
+          mensaje: 'Ni el mismo Usain Bolt lo podría hacer mejor',
+          objetivo: 1,
+          actual: 0,
+        },
+          ];
+      function initMap() {
+        
+        
+        
+        directionsService = new google.maps.DirectionsService;
+        directionsDisplay = new google.maps.DirectionsRenderer;
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: 37.1809411, lng: -3.5962912},
+          zoom: 13,
+          mapTypeControlOptions: {
+            mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain',
+                    'styled_map']
+          }
+        });
+        
+        directionsDisplay.setMap(map);
+        //map.mapTypes.set('styled_map', styledMapType);
+        //map.setMapTypeId('styled_map');
+        
+        
+        poly = new google.maps.Polyline({
+          strokeColor: '#0000FF',
+          strokeOpacity: 0.5,
+          strokeWeight: 150/map.zoom,
+          geodesic: false
+        });
+        
+        poly.setMap(map);          
+        
+        // Add a listener for the click event
+        map.addListener('click', addLatLng);
+        
+        var options = {
+          opacity: 0.5,
+        }
+        //map.addListener("click", addLatLng);
+        var elem = document.getElementById('modal1');
+        var instance = M.Modal.init(elem, options);
+        instance.open();
+        //prueba();
+        //Inicializar los puntos de venta
+        puntosDeVenta.forEach(function(elemento) {
+          var punto = new google.maps.Marker({
+            position: elemento.ubicacion,
+            map: map,
+          });
+          punto.addListener('click', darRuta);
+        });
+
+        logros.forEach(function(elemento) {
+            var str1 = "<ul id='logro"+elemento.id+"' class='collection'><li>Nombre: ";
+            var str2 = '</li><li>Descripcion: ';
+            var str3 = "</li><li><div class='progress'><div class='determinate' width="+(elemento.actual/elemento.objetivo)+"</div></li></ul>";
+            var texto = str1 + elemento.name + str2 + elemento.descripcion + str3;
+            var menuLogros = document.getElementById('snlogros');
+            var logroHTML = document.createElement('li');
+            logroHTML.innerHTML = texto;
+            menuLogros.appendChild(logroHTML);
+        });
+
+        ranking.forEach(function(elemento) {
+        var str1 = "<ul class='collection'><li>Nombre: ";
+        var str2;
+        var str3;
+        var str4 = '</li></ul>';
+        var texto;
+        if(elemento.id === usuario.id)
+        {
+            str2 = "</li><li id='miNivel1'>Nivel: ";
+            str3 = "</li><li id='misPuntos1'>Puntos:";
+            texto = str1+elemento.nombre+" (¡YO!)"+str2+elemento.nivel+str3+elemento.puntos+str4;
+        }
+        else
+        {
+            str2 = '</li><li>Nivel: ';
+            str3 = '</li><li>Puntos:';
+            texto = str1+elemento.nombre+str2+elemento.nivel+str3+elemento.puntos+str4;
+        }
+        var menuRanking = document.getElementById('snranking');
+            var logroHTML = document.createElement('li');
+            logroHTML.innerHTML = texto;
+            menuRanking.appendChild(logroHTML);
+        });
+      }
+      
+      function addLatLng(event) {
+        var path = poly.getPath();
+
+        // Because path is an MVCArray, we can simply append a new coordinate
+        // and it will automatically appear.
+        path.push(event.latLng);
+        console.log(path.b);
+        if(path.length === 2)
+        {
+            calcularDistancia(map.center, event.latLng);
+        }
+        if(path.length > 1)
+        {
+            console.log(path.b[path.length-1]);
+            console.log(path.b[path.length-2]);
+            calcularDistancia(path.b[path.length-2], path.b[path.length-1]);
+        }
+        
+      }
+
+      function calcularDistancia(inicio, fin){
+          var d1 = Math.abs(inicio.lat - fin.lat)*110.574;
+          var d2 = Math.abs(inicio.lng - fin.lng)*111.320*Math.abs(Math.cos(d1));
+          console.log(d1, d2);
+          var km = Math.sqrt(d1**2 + d2**2);
+          logros[0].actual += km;
+          if(logros[0].actual >= logros[0].objetivo && !logros[0].logrado)
+          {
+              logros[0].logrado = true;
+              logroObtenido(logros[0]);
+          }
+      }
+      
+      function darRuta(event){
+        alert('¡¿Está seguro que se quiere aventurar por esta ruta?!');
+        directionsService.route({
+          origin: map.center,
+          destination: event.latLng,
+          travelMode: 'DRIVING'
+        }, function(response, status) {
+          if (status === 'OK') {
+            directionsDisplay.setDirections(response);
+            console.log(response);
+          } else {
+            window.alert('Directions request failed due to ' + status);
+          }
+        });
+
+      }
+      
+      function logroObtenido(logro) {
+          var logros = document.getElementById('ind');
+          logros.innerHTML = "1";
+          var id = "logro" + logro.id;
+          var logroHTML = document.getElementById(id);
+          var recompensa = document.createElement('li');
+          recompensa.innerHTML = "<button id='btnLogro"+logro.id+"' class='btn waves-effect waves-light' onClick='recompensar("+logro.id+")'>Recompensa</button>";  
+          logroHTML.appendChild(recompensa);    
+      }
+
+      function recompensar(idLogro)
+      {
+          var logro = logros[idLogro];
+          var puntos = logro.dificultad*10;
+          var mensaje = logro.mensaje+"\nHas ganado "+puntos+" puntos.";
+          alert(mensaje);
+          var logrosHTML = document.getElementById('ind');
+          logrosHTML.innerHTML = "0";
+          var idBtn = "btnLogro"+idLogro;
+          var btnLogro = document.getElementById(idBtn);
+          btnLogro.disabled = true;
+          usuario.puntos += puntos;
+          var puntosHTML = document.getElementById('misPuntos');
+          puntosHTML.innerHTML = "Puntos: "+usuario.puntos;
+          var puntosHTML1 = document.getElementById('misPuntos1');
+          puntosHTML1.innerHTML = "Puntos: "+usuario.puntos;
+          if(usuario.puntos >= usuario.nivel*50)
+          {
+              usuario.nivel += 1;
+              var nivelHTML = document.getElementById('miNivel');
+                nivelHTML.innerHTML = "Nivel: "+usuario.nivel;
+                var nivelHTML1 = document.getElementById('miNivel1');
+                nivelHTML1.innerHTML = "Nivel: "+usuario.nivel;
+          }
+      }     
+      
+      function mostrarLogros() {
+        var elem = document.getElementById('snlogros');
+        var options = {
+          opacity: 0.5,
+        }
+        var instance = M.Sidenav.init(elem, options);
+        instance.open();
+      }
+      
+      function mostrarRanking(){
+        var elem =document.getElementById('snranking');
+        var options = {
+          opacity: 0.5,
+        }
+        var instance = M.Sidenav.init(elem, options);
+        instance.open();        
+      }
+
+      function mostrarPerfil() {
+        var elem = document.getElementById('snperfil');
+        var options = {
+          opacity: 0.5,
+          edge: 'right',
+        }
+        var instance = M.Sidenav.init(elem, options);
+        instance.open();
+      }
+
+      function confirmarVenta()
+      {
+        var elem = document.getElementById('venta');
+        var instance = M.Modal.init(elem, {});
+        instance.open();
+        logros[1].actual += 1;
+        if(logros[1].actual >= 1 && !logros[1].logrado)
+        {
+            logros[1].logrado = true;
+            logroObtenido(logros[1]);
+        }
+        var fecha = new Date();
+        if(usuario.minVenta != null && !logros[2].logrado)
+        {
+            var min = fecha.getMinutes() - usuario.minVenta;
+            if(min < 15)
+            {
+                logros[1].logrado = true;
+                logroObtenido(logros[2]);
+            }
+        }
+        else
+        {
+            usuario.minVenta = fecha.getMinutes();
+        }
+      }
+      
+      function ventaRealizada(idCliente){
+        
+        
+        
+      }
+      
+      function pintarZona(lat1, lon1, lat2, lon2){
+        
+        
+      
+      }
+      
+      
+      
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDZRCEKRJK-ewxNZoPW245a1pZGLE8zP4M&callback=initMap"
+    async defer></script>
+  </body>
+</html>
